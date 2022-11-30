@@ -3,7 +3,6 @@ import requests
 import math
 import time
 import datetime
-import urllib
 import pandas as pd
 import ctypes
 
@@ -25,8 +24,6 @@ with open("Debug.txt", "a", encoding="utf-8") as arquivo:
     date_time = data.strftime("%d/%m/%Y, %H:%M")
     arquivo.write(f"\n---------------------------------------------------------------------------------------------------------\nComeço do disparo {date_time}\n\n")
 
-portas = [8000, 8002, 8003, 8004]
-newportas = set()
 
 def enviar_mensagem(numero,porta):
     url = f"http://20.81.42.82:{porta}/send-message"
@@ -76,31 +73,34 @@ def enviarlog(numero,portas, tipo,mensagem):
             arquivo.write(f"[{tipo}]\n[NUMERO]={numero}\n[MENSAGEM]={mensagem}\n\n")
         else:
             arquivo.write(f"[{tipo}]\n\n[NUMERO]={numero}\n[MENSAGEM]=não teve dados suficientes para gerar a LOG\n")
-
+porta = 8000
 for i, mensagem in enumerate(contatos["NUMERO"]):
+    if porta == 8001:
+        porta = 8002
+    if porta == 8006:
+        porta = 8000
+
     numero = contatos.loc[i, "NUMERO"]
     statusTI = contatos.loc[i, "Status TI"]
 
     if quantidade < limiteQuantidade:
         if isNaN(statusTI):
             if not isNaN(numero):
-                porteira = random.choice(portas)
-                if not porteira in newportas:
-                    print(numero, porteira)
-                    if enviar_mensagem(numero,porteira):
-                        time.sleep(3)
-                        if enviar_audio(numero,porteira):
-                            quantidade += 1
-                            contatos.loc[i,'Status TI'] = "ENVIADO"
-                            contatos.to_excel("Enviar.xlsx", index=False)
-                            print(f"Disparando!\nTotal disparado: {quantidade}")
-                    else:
-                        contatos.loc[i,'Status TI'] = "PROBLEMATICO"
+                if enviar_mensagem(numero,porta):
+                    time.sleep(3)
+                    if enviar_audio(numero,porta):
+                        quantidade += 1
+                        contatos.loc[i,'Status TI'] = "ENVIADO"
                         contatos.to_excel("Enviar.xlsx", index=False)
-                        print(f"Mensagem não enviada!\nTotal disparado: {quantidade}")
+                        print(f"Disparando!\nTotal disparado: {quantidade}")
+                        print(porta)
+                        porta += 1
+                        
                 else:
-                    newportas.remove(porteira)
-                    pass
+                    contatos.loc[i,'Status TI'] = "PROBLEMATICO"
+                    contatos.to_excel("Enviar.xlsx", index=False)
+                    print(f"Mensagem não enviada!\nTotal disparado: {quantidade}")
+                    
                 numeroRand = random.randint(15,20)
                 time.sleep(numeroRand)
     else:
