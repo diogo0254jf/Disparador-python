@@ -75,10 +75,6 @@ def enviarlog(numero,portas, tipo,mensagem):
             arquivo.write(f"[{tipo}]\n\n[NUMERO]={numero}\n[MENSAGEM]=não teve dados suficientes para gerar a LOG\n")
 porta = 8000
 for i, mensagem in enumerate(contatos["NUMERO"]):
-    if porta == 8001:
-        porta = 8002
-    if porta == 8006:
-        porta = 8000
 
     numero = contatos.loc[i, "NUMERO"]
     statusTI = contatos.loc[i, "Status TI"]
@@ -86,16 +82,11 @@ for i, mensagem in enumerate(contatos["NUMERO"]):
     if quantidade < limiteQuantidade:
         if isNaN(statusTI):
             if not isNaN(numero):
-                if enviar_mensagem(numero,porta):
-                    time.sleep(3)
-                    if enviar_audio(numero,porta):
-                        quantidade += 1
-                        contatos.loc[i,'Status TI'] = "ENVIADO"
-                        contatos.to_excel("Enviar.xlsx", index=False)
-                        print(f"Disparando!\nTotal disparado: {quantidade}")
-                        print(porta)
-                        porta += 1
-                        
+                if enviar_audio(numero,porta):
+                    quantidade += 1
+                    contatos.loc[i,'Status TI'] = "ENVIADO"
+                    contatos.to_excel("Enviar.xlsx", index=False)
+                    print(f"Disparando!\nTotal disparado: {quantidade}")
                 else:
                     contatos.loc[i,'Status TI'] = "PROBLEMATICO"
                     contatos.to_excel("Enviar.xlsx", index=False)
